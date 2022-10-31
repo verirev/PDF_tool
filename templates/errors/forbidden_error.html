@@ -1,0 +1,12 @@
+{% extends "includes/_error_template.html" %}
+{% block main_content %}
+<div class="error_message_container text-center">
+    <p>
+        {{_('You are not authorized.')}}
+    </p>
+    
+    <button class="btn go_back" style="background-color: #5CA7C6;color:white">
+        {{_('GO BACK')}}
+    </button>
+</div>
+{% endblock %}
