@@ -1,5 +1,7 @@
+from datetime import datetime
 import re
 from PyPDF2 import PdfFileReader
+from db_utils import setter_file_single, getter_file_single, updater_file_single
 
 def create_trx(size:int,mode='s'):
     import random
@@ -9,6 +11,26 @@ def create_trx(size:int,mode='s'):
     else:
         chars = string.ascii_uppercase + string.digits
     return ''.join(random.choice(chars) for _ in range(size))
+
+def password_getter(username):
+    from config import database
+    admin_log_c = database['users']
+    counted_records=admin_log_c.count_documents({'username':username})
+    if counted_records >0:
+        record_got=admin_log_c.find_one({'username':username})
+        password_hash = record_got['password']
+        return {'status':True,'msg':'Success', 'password':password_hash}
+    else:
+        return {'status':False,'msg':'No user found'}
+
+def register_new(username, password='admin@ADMIN',role = 'admin'):
+    from config import database
+    file_log_c = database['users']
+    from passlib.hash import pbkdf2_sha512
+    new_password = pbkdf2_sha512.hash(password)
+    password_hashed = new_password
+    file_log_c.insert_one({'username':username, 'password':password_hashed, 'role':role, 'created_at':datetime.now()})
+    return True
 
 def read_and_process_pdf(full_file_path:str, dict_of_kw:dict)->dict:
     """Input like 
@@ -29,7 +51,8 @@ def read_and_process_pdf(full_file_path:str, dict_of_kw:dict)->dict:
         pdf = PdfFileReader(f)
         pdf_info = pdf.getDocumentInfo()
         number_of_pages = pdf.getNumPages()
-        for page_no in range(1, number_of_pages+1):
+        # print('number_of_pages', number_of_pages)
+        for page_no in range(0, number_of_pages):
             single_page = pdf.getPage(page_no)
             text_in_page = single_page.extractText()
             # pdf_init_dict[page_no] = text_in_page
@@ -44,10 +67,11 @@ def read_and_process_pdf(full_file_path:str, dict_of_kw:dict)->dict:
                     list_of_appearance = dict_single.get('appearance', [])
                     # Loop though count_in_current_page
                     list_of_indexes = [ i.start() for i in re.finditer(kw_string, text_in_page)]
+                    print(list_of_indexes)
                     kw_len = len(kw_string)
                     text_len = len(text_in_page)
                     for idx in list_of_indexes:
-                        appearance_dict = {'page_no':page_no}
+                        appearance_dict = {'page_no':page_no+1}
                         appearance_dict['started_at'] = idx
                         # 'extract_left':string, 'extract_right':string
                         # get left extract 
@@ -60,15 +84,68 @@ def read_and_process_pdf(full_file_path:str, dict_of_kw:dict)->dict:
                             extract_left = ''
                         # get right extract 
                         end_idx = idx + kw_len
-                        if end_idx > text_len-1:
-                            extract_right = ''
-                        else:
-                            extract_right = text_in_page[end_idx:end_right]
+                        extract_right = text_in_page[end_idx:end_idx+end_right]
                         appearance_dict['extract_left'] = extract_left
                         appearance_dict['extract_right'] = extract_right
-                    list_of_appearance.append(appearance_dict)
+                        list_of_appearance.append(appearance_dict)
                     dict_single['appearance'] = list_of_appearance
         return dict_of_kw, pdf_info
+
+def file_info_saver(file_name, file_url):
+    file_id = create_trx(8)
+    dict_to_save = { 'file_name': file_name, 'file_url': file_url, 'file_id': file_id }    
+    setter_bool = setter_file_single(dict_to_save)
+    if setter_bool:
+        return file_id
+    else:
+        return None
+
+def get_file_by_id(file_id):
+    file_dict = getter_file_single({'file_id':file_id})
+    return file_dict
+
+def file_info_updater(file_id, dict_to_update):
+    finder_d  = {'file_id': file_id}
+    setter_bool = updater_file_single(finder_d, dict_to_update)
+    return setter_bool
+
+def update_kw(file_id, kw_d):
+    keyword_dict = {}
+    for key_n, dict_single in kw_d.items():
+        kw_string = dict_single.get('kw', 'NoKw')
+        prefx = dict_single.get('prefx', 0)
+        pstfx = dict_single.get('pstfx', 0)
+        keyword_dict[kw_string] = {'start_left':prefx, 'end_right':pstfx, 'count':0, 'appearance':[]}
+    return file_info_updater(file_id=file_id, dict_to_update={'keyword_dict':keyword_dict})
+
+def get_list_of_file_d():
+    from db_utils import getter_file_list
+    return getter_file_list(sort_dict={'updated':-1})
+
+def report_gen(file_id, container_dir):
+    from config import pp
+    file_dict = get_file_by_id(file_id)
+    keyword_dict = file_dict.get('keyword_dict', {})
+    file_name = file_dict.get('file_name', 'nofile')
+    full_file_path = f'{container_dir}/{file_name}'
+    dict_of_kw, pdf_info = read_and_process_pdf(full_file_path, keyword_dict)
+    print(type(pdf_info))
+    pp.pprint(pdf_info)
+    #SAve to db
+    dict_to_update = {'report':{'report_list':dict_of_kw, 'report_time':datetime.now()}}
+    return file_info_updater(file_id=file_id, dict_to_update=dict_to_update)
+
+def report_processor(report_bool, file_report_dict):
+    key_list = []
+    appearance_list = []
+    if report_bool:
+        for key, value in file_report_dict.items():
+            key_items = [key, value.get('start_left', 0), value.get('end_right', 0), value.get('count', 0)]
+            if key_items not in key_list:
+                key_list.append(key_items)
+            appearance_list.append(value.get('appearance', []))
+    return [key_list, appearance_list]
+            
 
 def excel_output(file_id):
     return []

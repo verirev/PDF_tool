@@ -23,7 +23,7 @@ from werkzeug.exceptions import BadRequest, InternalServerError, Forbidden, HTTP
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8870821e-e123-4277-b918-66222afe4a29-fb8bba96-c1ab-47d0-8baf-a8f1aabe0b31' #Randomly generated
+app.config['SECRET_KEY'] = '8870821eedywuiedywi' #Randomly generated
 app.config['UPLOAD_FOLDER'] = PROJECT_ROOT+'/files'
 app.config['UPLOADED_PDFILES_DEST']=PROJECT_ROOT+'/files/contracts'
 app.config['UPLOADED_PDFILES_ALLOW'] = set(['pdf'])
@@ -104,23 +104,34 @@ class PDFUploadForm(FlaskForm):
 
 @app.route('/', methods=['GET'])
 def dashboard():
-    return render_template('dashboard.html')
+    from utils import get_list_of_file_d
+    file_list = get_list_of_file_d()
+    return render_template('pages/dashboard.html', file_list = file_list)
 
 @app.route('/file/view', methods=['GET'])
 def file_view():
     file_id = request.args.get('file_id', None)
     return render_template('file_view.html')
 
+@app.route('/file/single/<filename>', methods=['GET'])
+def file_single(filename):
+    return send_from_directory(app.config['UPLOADED_PDFILES_DEST'], filename)
+
 @app.route('/file/upload', methods=['GET', 'POST'])
 def file_upload():
-    from utils import create_trx
+    from utils import create_trx, file_info_saver
     pdform = PDFUploadForm()
     if pdform.validate_on_submit():
         filename_original = pdform.pdf_file.data.filename
         fname1 = filename_original.split('.pdf')[0].replace(' ','_')
         name_to_save = f'{fname1}_{create_trx(4)}_{datetime.now().strftime("%Y%m%d")}.pdf'
         filename_saved = pdfiles.save(storage = pdform.pdf_file.data, name = name_to_save)
-    return render_template('upload_page.html')
+        file_url = url_for('file_single', filename = filename_saved)
+        file_id = file_info_saver(name_to_save, file_url)
+    else:
+        file_url = None
+        file_id = None
+    return render_template('pages/upload_page.html', form = pdform, file_url = file_url, file_id = file_id)
 
 @app.route('/file/delete/<file_id>', methods=['POST'])
 def file_delete(file_id):
@@ -128,15 +139,30 @@ def file_delete(file_id):
 
 @app.route('/file/add/keywords/<file_id>', methods=['GET', 'POST'])
 def file_uadd_keywords(file_id):
+    from utils import get_file_by_id, update_kw
     if request.method == 'POST':
         # Add keywords part
-        pass
-    return render_template('add_keywords.html')
+        kw_d = request.json.get('kw', {})
+        status = update_kw(file_id, kw_d)
+        return jsonify({'status':status})
+    file_dict = get_file_by_id(file_id)
+    return render_template('pages/add_keywords.html', file_dict = file_dict )
 
-@app.route('/report/<file_id>', methods=['GET'])
+@app.route('/report/<file_id>', methods=['GET', 'POST'])
 def report_getter(file_id):
-    # file_id = request.args.get('file_id', None)
-    return render_template('report_getter.html')
+    from utils import get_file_by_id, report_gen, report_processor
+    file_dict = get_file_by_id(file_id)
+    file_report_d = file_dict.get('report', {})
+    file_report_list = file_report_d.get('report_list', {})
+    generated_at = file_report_d.get('report_time', 'Undefined')
+    report_bool = bool(file_report_list)
+    if request.method == 'POST':
+        # Generate report
+        generate_b = request.json.get('generate', True)
+        status = report_gen(file_id, app.config['UPLOADED_PDFILES_DEST'])
+        return jsonify({'status':status})
+    report_processed = report_processor(report_bool, file_report_list)
+    return render_template('pages/report_getter.html', file_dict = file_dict, report_bool = report_bool, file_report_list = file_report_list, generated_at = generated_at, report_processed = report_processed, key_list_title = ['Keyword', 'Start left', 'End right', 'Appearance Count'])
 
 @app.route('/download/report/<file_id>', methods=['GET'])
 def report_downloads(file_id):
@@ -145,6 +171,32 @@ def report_downloads(file_id):
     file_name_str = 'Report_{}'.format(file_id)
     return excel.make_response_from_book_dict(excel_output_book, 'xlsx',file_name = file_name_str)
 
+@app.route('/login',methods=['GET','POST'])
+def user_login():
+    from utils import password_getter
+    from passlib.hash import pbkdf2_sha512
+    login_error_message = 'Wrong Username or Password'
+    session.clear()
+    if request.method == 'POST':
+        username = request.form['username']
+        password_candidate = request.form['password']
+        print(username, password_candidate)
+        #get hashed password from mongo
+        password_obj = password_getter(username)
+        role = role_getter(username)
+        if password_obj['status'] == True:
+            if pbkdf2_sha512.verify(password_candidate, password_obj['password']):
+                session['logged_in'] = True
+                session['is_admin'] = True
+                session['username'] = username
+                return redirect(url_for('dashboard'))
+            else:
+                error = login_error_message
+                return render_template('login/login.html', error=error)
+        else:
+            error = login_error_message
+            return render_template('login/login.html', error=error)
+    return render_template('login/login.html')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,48 @@
+{% extends "includes/_page_template.html" %}
+
+{% block body_content %}
+<div class="row">
+    <div class="col-6 mx-auto mt-5 text-center">
+        <h1 class="mb-5 pdf-form">Upload PDF File</h1>
+        <form class="pdf-form" method="post" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            {% for error in form.pdf_file.errors %}
+                <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+            <div class="row justify-content-center">
+                <div class="col-auto">
+                    {{ form.pdf_file(class = "form-control") }}
+                </div>
+                <div class="col-auto">
+                    {{ form.submit(class = "btn btn-success") }}
+                </div>
+            </div>
+        </form>
+        {% if file_id %}
+            <div class="mt-5 mx-auto">
+                <span>File uploaded successfully. Please </span>
+                <span><a href="{{ url_for('file_uadd_keywords', file_id = file_id)}}">this link</a></span>
+                <span> to add keywords</span>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles_lib %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+{% endblock %}
+{% block styles %}{% endblock %}
+{% block js__head_lib %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+{% endblock %}
+{% block js_scripts %}
+<script>
+    var file_id = {{file_id|tojson}};
+    if (file_id){
+        $('.pdf-form').hide();
+    }
+
+</script>
+{% endblock %}

@@ -2,7 +2,7 @@ from config import database, datetime, date, timedelta
 from pymongo import ReturnDocument
 
 def setter_file_single(dict_to_save = {}):
-    collection_obj = database['fidict_to_savele_db']
+    collection_obj = database['file_db']
     dict_to_save['created_at'] = datetime.now()
     dict_to_save['updated_at'] = datetime.now()
     cursor_obj = collection_obj.insert_one(dict_to_save)

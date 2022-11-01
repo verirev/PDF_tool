@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>PDF TOOL LOGIN</title>
+
+    {% block added_css %}{% endblock %}
+    {% block header_js %}{% endblock %}
+</head>
+<body>
+    <div class="container-fluid" style="height:100vh;overflow-y: scroll;">
+        {% block main_content %}{% endblock %}
+    </div>
+    {% block modals %}{% endblock %}
+    {% block js_scripts %}{% endblock %}
+    {% block js_content %}{% endblock %}
+    {% block js_content_2 %}{% endblock %}
+</body>
+</html>

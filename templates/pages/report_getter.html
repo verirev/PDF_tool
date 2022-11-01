@@ -1,0 +1,193 @@
+{% extends "includes/_page_template.html" %}
+
+{% block body_content %}
+<div class="row">
+    <div class="col-8 mx-auto mt-3 text-center">
+        <div class="row top_nav">
+            <div class="col"><a href="{{url_for('dashboard')}}">DASHBOARD</a></div>
+            <div class="col"><a href="{{url_for('file_upload')}}">UPLOAD FILE</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="row" id="pdf-container">
+    <div class="col">
+        <div class="row">
+            <div class="col-6 mx-auto mt-3 text-center">
+                <h1 class="mb-5">REPORT</h1>
+            </div>
+        </div>
+        <div class="row file_row text-center">
+            <div class="col-2 offset-2">File Name:</div>
+            <div class="col-6">{{ file_dict['file_name'] }}</div>
+        </div>
+        {% if report_bool == True %}    
+            {% for key_list in report_processed[0] %}
+            <div class="row rpdata">
+                <div class="col">
+                    <div class="row" style="font-weight: bold;">
+                    {% for key_item in key_list %}
+                        <div class="col">{{key_list_title[loop.index0]}}:{{key_item}}</div>
+                    {% endfor %}
+                    </div>
+        
+                    {% for app_single in report_processed[1][loop.index0] %}
+                    <div class="row text_show">
+                        <div class="col-6"><span class="focus_t_title">Focus text:&nbsp;&nbsp;</span><span class="focus_t_left">"...{{app_single['extract_left']}}</span><span class="focus_t_kw">{{key_list[0]}}</span><span class="focus_t_right">{{app_single['extract_right']}}..."</span></div>
+                        <div class="col-4"><span class="page_no">Page no:</span><span>{{app_single['page_no']}}</span></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        <div class="row text-center" style="font-style: italic;"><div class="col">Report generated at:{{generated_at}}</div></div>
+        
+        {% else %}
+        <div class="row file_row text-center">
+            <div class="col">
+                There is no report available for this file. Please generate report first.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+<div class="row file_row text-center">
+    <div class="col-2 offset-3">
+        <!-- Add Keywords -->
+        <button style="justify-content:center;" class="btn btn-secondary centered_button" id="add-kw-{{file_dict['file_id']}}" onclick="javascript:go_get_url(`{{ url_for('file_uadd_keywords', file_id = file_dict['file_id'])}}`)">Add Keywords</button>
+    </div>
+    <div class="col-2">
+        <!-- View Report -->
+        <button style="justify-content:center;" class="btn btn-info centered_button" id="generate-report-{{file_dict['file_id']}}" onclick="javascript:report_gen(`{{ url_for('report_getter', file_id = file_dict['file_id'])}}`)">Generate Report</button>
+    </div>
+    {% if report_bool == True %}
+    <div class="col-2">
+        <!-- Down Report -->
+        <button style="justify-content:center;" class="btn btn-success centered_button" id="download-report-{{file_dict['file_id']}}" onclick="javascript:report_down()">Download Report</button>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block styles_lib %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+{% endblock %}
+{% block styles %}
+<style>
+        .centered_button {
+        align-self: center;
+        width: fit-content;
+    }
+    body{
+        font-size: 14px;
+    }
+    button{
+        font-size: 14px !important;
+    }
+    .file_row{
+        background-color: bisque;
+        border-radius: 10px;
+        box-shadow: 1px 1px aqua;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-top:10px;
+    }
+    .file_row_head{
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+    .top_nav{
+        text-align: center;
+    }
+    .top_nav>div>a{
+        text-decoration: none;
+        font-size: large;
+        font-weight: bold;
+        color: black;
+        cursor: pointer;
+    }
+    .top_nav>div>a:hover{
+        color: chocolate;
+    }
+    .focus_t_title{
+        font-weight: bold;
+    }
+    .focus_t_left{
+        font-style: italic;
+    }
+    .focus_t_right{
+        font-style: italic;
+    }
+    .focus_t_kw{
+        font-style: italic;
+        font-weight: bold;
+    }
+    .page_no{
+        font-weight: bold;
+    }
+    .rpdata{
+        background-color: gainsboro;
+        border-radius: 10px;
+        margin-top: 10px;
+        padding: 10px;
+    }
+    .text_show{
+        background-color: aqua;
+        border-radius: 5px;
+        margin-top: 5px;
+        padding: 5px;
+    }
+</style>
+{% endblock %}
+{% block js__head_lib %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+{% endblock %}
+{% block js_scripts %}
+<script src="{{ url_for('static', filename='libraries/html2pdf.bundle.min.js') }}"></script>
+
+<script>
+    var csrf_token = "{{ csrf_token() }}";
+$.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrf_token);
+        }
+    }
+});
+</script>
+<script>
+    function go_get_url(url){
+        window.location.href = url;
+    }
+    function report_down(){
+        const element = document.getElementById('pdf-container');
+				html2pdf().from(element).save();
+    }
+    function report_gen(url){
+        $.ajax({
+                type:"POST",
+                contentType: "application/json; charset=utf-8",
+                data : JSON.stringify({'generate':true}),
+                dataType: "json",
+                url: url,
+                success: function (data) {
+                            console.log(data);
+                            if (data.status){
+                                setTimeout(()=>{
+                                    window.location.href = "{{ url_for('report_getter', file_id = file_dict['file_id'])}}";
+                                },200)
+
+                            }
+                            else {
+                                $('#error').show();
+                            }
+                        }
+                });
+    }
+</script>
+{% endblock %}
