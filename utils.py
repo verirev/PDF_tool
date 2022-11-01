@@ -32,6 +32,23 @@ def register_new(username, password='admin@ADMIN',role = 'admin'):
     file_log_c.insert_one({'username':username, 'password':password_hashed, 'role':role, 'created_at':datetime.now()})
     return True
 
+def register_new_google(saver_d = {}):
+    from config import database
+    file_log_c = database['users']
+    from passlib.hash import pbkdf2_sha512
+    saver_d['registered_from'] = 'google'
+    saver_d['created_at'] = datetime.now()
+    saver_d['updated_at'] = datetime.now()
+    cursor_obj = file_log_c.insert_one(saver_d)
+    return bool(cursor_obj.inserted_id)
+
+def user_getter(getter_d = {}, projection_dict = {}):
+    from config import database
+    file_log_c = database['users']
+    projection_dict['_id'] = False
+    cursor_obj = file_log_c.find_one(getter_d, projection = projection_dict)
+    return cursor_obj
+
 def read_and_process_pdf(full_file_path:str, dict_of_kw:dict)->dict:
     """Input like 
     dict_of_kw = {
@@ -91,18 +108,29 @@ def read_and_process_pdf(full_file_path:str, dict_of_kw:dict)->dict:
                     dict_single['appearance'] = list_of_appearance
         return dict_of_kw, pdf_info
 
-def file_info_saver(file_name, file_url):
+def file_info_saver(file_name, file_url, user_id):
     file_id = create_trx(8)
-    dict_to_save = { 'file_name': file_name, 'file_url': file_url, 'file_id': file_id }    
+    dict_to_save = { 'file_name': file_name, 'file_url': file_url, 'file_id': file_id, 'user_id':user_id }    
     setter_bool = setter_file_single(dict_to_save)
     if setter_bool:
         return file_id
     else:
         return None
 
-def get_file_by_id(file_id):
-    file_dict = getter_file_single({'file_id':file_id})
+def get_file_by_id(file_id, user_id):
+    file_dict = getter_file_single({'file_id':file_id, 'user_id':user_id})
     return file_dict
+
+def file_access_checker(file_id, user_id):
+    from db_utils import getter_file_count
+    count_by_file_id = getter_file_count({'file_id':file_id})
+    count_by_user_and_file_id = getter_file_count({'file_id':file_id, 'user_id':user_id})
+    if bool(count_by_user_and_file_id) == False and bool(count_by_file_id) == True:
+        return 'access_denied'
+    elif bool(count_by_user_and_file_id) == False and bool(count_by_file_id) == False:
+        return 'not_found'
+    else:
+        return 'access_granted'
 
 def file_info_updater(file_id, dict_to_update):
     finder_d  = {'file_id': file_id}
@@ -118,9 +146,9 @@ def update_kw(file_id, kw_d):
         keyword_dict[kw_string] = {'start_left':prefx, 'end_right':pstfx, 'count':0, 'appearance':[]}
     return file_info_updater(file_id=file_id, dict_to_update={'keyword_dict':keyword_dict})
 
-def get_list_of_file_d():
+def get_list_of_file_d(finder_d = {}):
     from db_utils import getter_file_list
-    return getter_file_list(sort_dict={'updated':-1})
+    return getter_file_list(finder_dict=finder_d ,sort_dict={'updated':-1})
 
 def report_gen(file_id, container_dir):
     from config import pp
