@@ -25,6 +25,7 @@ server {
     server_name YOUR_DOMAIN;
     error_log  /var/log/nginx/pdftool-error.log;
     access_log  /var/log/nginx/pdftool-access.log;
+    client_max_body_size 64M;
     location / {
         include proxy_params;
         proxy_pass http://unix:/var/www/pdftool/pdftool.sock;
