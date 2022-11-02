@@ -61,8 +61,7 @@ def is_logged_in(f):
         username = session.get('username','')
         username_bool = bool(username)
         logged_in_bool = 'logged_in' in session
-        google_id_bool = 'google_id' in session
-        if logged_in_bool and username_bool and google_id_bool:
+        if logged_in_bool and username_bool:
             return f(*args, **kwargs)
         else:
             return redirect(url_for('login'))
@@ -183,7 +182,8 @@ def file_uadd_keywords(file_id):
         status = update_kw(file_id, kw_d)
         return jsonify({'status':status})
     file_dict = get_file_by_id(file_id, user_id)
-    return render_template('pages/add_keywords.html', file_dict = file_dict )
+    keyword_dict = file_dict.get('keyword_dict', {})
+    return render_template('pages/add_keywords.html', file_dict = file_dict, keyword_dict = keyword_dict )
 
 @app.route('/report/<file_id>', methods=['GET', 'POST'])
 @is_logged_in
@@ -211,23 +211,49 @@ def report_downloads(file_id):
     file_name_str = 'Report_{}'.format(file_id)
     return excel.make_response_from_book_dict(excel_output_book, 'xlsx',file_name = file_name_str)
 
-@app.route('/admin/login',methods=['GET','POST'])
-def user_login():
-    from utils import password_getter
+@app.route('/register',methods=['GET','POST'])
+def register():
+    from utils import register_new, create_trx
+    from passlib.hash import pbkdf2_sha512
+    login_error_message = 'Registration status: '
+    session.clear()
+    if request.method == 'POST':
+        email = request.form['email']
+        name = request.form['name']
+        password_plain = request.form['password']
+        user_id = create_trx(8)
+        status_d = register_new(email=email, name=name, password=password_plain, role='user', user_id= user_id)
+        if not status_d.get('status', False):
+            error = f"{login_error_message}{status_d.get('status', False)}\nReason: {status_d.get('msg', False)}"
+            return render_template('register/register.html', error=error)
+        else:
+            session['username'] = email
+            session['logged_in'] = True
+            session['role'] = 'user'
+            session['user_id'] = user_id
+            session['registered_from'] = 'email_module'
+            return redirect(url_for('dashboard'))
+    return render_template('register/register.html')
+
+@app.route('/login',methods=['GET','POST'])
+def login():
+    from utils import password_getter, user_getter
     from passlib.hash import pbkdf2_sha512
     login_error_message = 'Wrong Username or Password'
     session.clear()
     if request.method == 'POST':
         username = request.form['username']
         password_candidate = request.form['password']
-        print(username, password_candidate)
         #get hashed password from mongo
         password_obj = password_getter(username)
+        user_got = user_getter({'username':username})
         if password_obj['status'] == True:
             if pbkdf2_sha512.verify(password_candidate, password_obj['password']):
-                session['logged_in'] = True
-                session['is_admin'] = True
                 session['username'] = username
+                session['logged_in'] = True
+                session['role'] = 'user'
+                session['user_id'] = user_got.get('user_id', '')
+                session['registered_from'] = 'email_module'
                 return redirect(url_for('dashboard'))
             else:
                 error = login_error_message
@@ -237,8 +263,8 @@ def user_login():
             return render_template('login/login.html', error=error)
     return render_template('login/login.html')
 
-@app.route('/login')
-def login():
+@app.route('/login/authorization/google')
+def login_auth_google():
     authorization_url, state = flow.authorization_url()
     session["state"] = state
     return redirect(authorization_url)
@@ -271,6 +297,7 @@ def callback():
         session['logged_in'] = True
         session['role'] = 'user'
         session['user_id'] = user_got.get('user_id', '')
+        session['registered_from'] = 'google'
     else:
         _saver_d = {'username':id_info.get("sub"), 'role':'user', 'user_id':create_trx(8)}
         saver_d = {**_saver_d, **getter_d}
@@ -280,6 +307,7 @@ def callback():
         session['logged_in'] = True
         session['role'] = 'user'
         session['user_id'] = saver_d.get('user_id', '')
+        session['registered_from'] = 'google'
     return redirect(url_for('dashboard'))
 
 @app.route('/logout')

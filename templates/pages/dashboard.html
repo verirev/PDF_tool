@@ -16,89 +16,106 @@
     </div>
 </div>
 {% if file_list|length %}
-    {% for file_single in file_list %}
-    <div class="row file_row_head text-center">
-        <div class="col-6">File Name</div>
-        <div class="col-2">
-            <!-- Add Keywords -->
-        </div>
-        <div class="col-2">
-            <!-- View Report -->
-        </div>
-        <div class="col-2">
-            <!-- updated-->
-            Updated
-        </div>
+<div class="row file_row_head text-center">
+    <div class="col-6">File Name</div>
+    <div class="col-2">
+        <!-- Add Keywords -->
     </div>
-    <div class="row file_row text-center">
-        <div class="col-6">{{ file_single['file_name'] }}</div>
-        <div class="col-2">
-            <!-- Add Keywords -->
-            <button style="justify-content:center;" class="btn btn-secondary centered_button" id="add-kw-{{file_single['file_id']}}" onclick="javascript:go_get_url(`{{ url_for('file_uadd_keywords', file_id = file_single['file_id'])}}`)">Add Keywords</button>
-        </div>
-        <div class="col-2">
-            <!-- View Report -->
-            <button style="justify-content:center;" class="btn btn-info centered_button" id="view-report-{{file_single['file_id']}}" onclick="javascript:go_get_url(`{{ url_for('report_getter', file_id = file_single['file_id'])}}`)">View Report</button>
-        </div>
-        <div class="col-2">
-            {{ file_single['updated_at'] }}
-        </div>
+    <div class="col-2">
+        <!-- View Report -->
     </div>
-    {% endfor %}
+    <div class="col-2">
+        <!-- updated-->
+        Updated
+    </div>
+</div>
+{% for file_single in file_list %}
+<div class="row file_row text-center">
+    <div class="col-6">{{ file_single['file_name'] }}</div>
+    <div class="col-2">
+        <!-- Add Keywords -->
+        <button style="justify-content:center;" class="btn btn-secondary centered_button"
+            id="add-kw-{{file_single['file_id']}}"
+            onclick="javascript:go_get_url(`{{ url_for('file_uadd_keywords', file_id = file_single['file_id'])}}`)">Add
+            Keywords</button>
+    </div>
+    <div class="col-2">
+        <!-- View Report -->
+        <button style="justify-content:center;" class="btn btn-info centered_button"
+            id="view-report-{{file_single['file_id']}}"
+            onclick="javascript:go_get_url(`{{ url_for('report_getter', file_id = file_single['file_id'])}}`)">View
+            Report</button>
+    </div>
+    <div class="col-2">
+        {{ file_single['updated_at'] }}
+    </div>
+</div>
+{% endfor %}
 {% endif %}
 
 {% endblock %}
 
 {% block styles_lib %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 {% endblock %}
 {% block styles %}
 <style>
-        .centered_button {
+    .centered_button {
         align-self: center;
         width: fit-content;
     }
-    body{
+
+    body {
         font-size: 14px;
     }
-    button{
+
+    button {
         font-size: 14px !important;
     }
-    .file_row{
+
+    .file_row {
         background-color: bisque;
         border-radius: 10px;
         box-shadow: 1px 1px aqua;
         padding-top: 10px;
         padding-bottom: 10px;
-        margin-top:10px;
+        margin-top: 10px;
     }
-    .file_row_head{
+
+    .file_row_head {
         font-size: 20px;
         font-weight: bold;
         margin-top: 20px;
     }
-    .top_nav{
+
+    .top_nav {
         text-align: center;
     }
-    .top_nav>div>a{
+
+    .top_nav>div>a {
         text-decoration: none;
         font-size: large;
         font-weight: bold;
         color: black;
         cursor: pointer;
     }
-    .top_nav>div>a:hover{
+
+    .top_nav>div>a:hover {
         color: chocolate;
     }
 </style>
 {% endblock %}
 {% block js__head_lib %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"
+    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
 {% endblock %}
 {% block js_scripts %}
 <script>
-    function go_get_url(url){
+    function go_get_url(url) {
         window.location.href = url;
     }
 </script>

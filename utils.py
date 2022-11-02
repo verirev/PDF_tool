@@ -23,14 +23,19 @@ def password_getter(username):
     else:
         return {'status':False,'msg':'No user found'}
 
-def register_new(username, password='admin@ADMIN',role = 'admin'):
-    from config import database
-    file_log_c = database['users']
-    from passlib.hash import pbkdf2_sha512
-    new_password = pbkdf2_sha512.hash(password)
-    password_hashed = new_password
-    file_log_c.insert_one({'username':username, 'password':password_hashed, 'role':role, 'created_at':datetime.now()})
-    return True
+def register_new(email='', name='', password='admin@ADMIN', user_id =create_trx(8), role = 'admin'):
+    from db_utils import getter_user_count, setter_user_single
+    finder_d = {'email':email, 'registered_from':'email_module'}
+    if not bool(getter_user_count(finder_d)):
+        saver_d = {'email':email, 'username':email, 'name':name, 'role':role, 'registered_from':'email_module'}
+        from passlib.hash import pbkdf2_sha512
+        new_password = pbkdf2_sha512.hash(password)
+        saver_d['password'] = new_password
+        saver_d['user_id'] = create_trx(8)
+        save_status = setter_user_single(saver_d)
+        return {'status': save_status, 'msg':''}
+    else:
+        return {'status':False, 'msg':'User Exists'}
 
 def register_new_google(saver_d = {}):
     from config import database
@@ -42,12 +47,9 @@ def register_new_google(saver_d = {}):
     cursor_obj = file_log_c.insert_one(saver_d)
     return bool(cursor_obj.inserted_id)
 
-def user_getter(getter_d = {}, projection_dict = {}):
-    from config import database
-    file_log_c = database['users']
-    projection_dict['_id'] = False
-    cursor_obj = file_log_c.find_one(getter_d, projection = projection_dict)
-    return cursor_obj
+def user_getter(getter_d = {}):
+    from db_utils import getter_user_single
+    return getter_user_single(getter_d)
 
 def read_and_process_pdf(full_file_path:str, dict_of_kw:dict)->dict:
     """Input like 

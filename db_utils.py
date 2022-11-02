@@ -35,3 +35,28 @@ def getter_file_list( finder_dict = {}, projection_dict = {}, sort_dict = {}):
     else:
         cursor_obj = collection_obj.find(finder_dict, projection = projection_dict)
     return list(cursor_obj)
+
+def setter_user_single(dict_to_save = {}):
+    collection_obj = database['users']
+    dict_to_save['created_at'] = datetime.now()
+    dict_to_save['updated_at'] = datetime.now()
+    cursor_obj = collection_obj.insert_one(dict_to_save)
+    return bool(cursor_obj.inserted_id)
+
+def updater_user_single(finder_dict = {}, dict_to_save = {}):
+    collection_obj = database['users']
+    dict_to_save['updated_at'] = datetime.now()
+    cursor_obj = collection_obj.find_one_and_update(finder_dict, {'$set':dict_to_save}, return_document = ReturnDocument.AFTER)
+    return bool(cursor_obj)
+
+def getter_user_single(finder_dict = {}, projection_dict = {}):
+    collection_obj = database['users']
+    projection_dict['_id'] = False
+    cursor_obj = collection_obj.find_one(finder_dict, projection = projection_dict)
+    return cursor_obj
+
+def getter_user_count(finder_dict = {}):
+    collection_obj = database['users']
+    cursor_obj = collection_obj.count_documents(finder_dict)
+    return cursor_obj
+

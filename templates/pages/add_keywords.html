@@ -7,6 +7,7 @@
         File: {{ file_dict['file_name']}}
     </div>
 </div>
+{% if not keyword_dict|length %}
 <div class="row">
     <div class="col-8 mx-auto mt-5 text-center" id="kw-container">
         <div class="row justify-content-center kw-container-single">
@@ -14,19 +15,22 @@
                 <div class="row" style="margin-top: 10px;">
                     <div class="col-4">Keyword:</div>
                     <div class="col-5">
-                        <input type="text" name="kw-0" id="kw-0" class="kw-class text-center" placeholder="Enter Keyword">
+                        <input type="text" name="kw-0" id="kw-0" class="kw-class text-center"
+                            placeholder="Enter Keyword">
                     </div>
                 </div>
                 <div class="row" style="margin-top: 10px;">
                     <div class="col-4">Prefix starts at:</div>
                     <div class="col-5">
-                        <input type="text" name="prefix-0" id="prefix-0" class="prefix-class text-center" placeholder="Before kw, n numbers of chars">
+                        <input type="text" name="prefix-0" id="prefix-0" class="prefix-class text-center"
+                            placeholder="Before kw, n numbers of chars">
                     </div>
                 </div>
                 <div class="row" style="margin-top: 10px;">
                     <div class="col-4">Postfix ends at:</div>
                     <div class="col-5">
-                        <input type="text" name="postfix-0" id="postfix-0" class="postfix-class text-center" placeholder="After kw, n numbers of chars">
+                        <input type="text" name="postfix-0" id="postfix-0" class="postfix-class text-center"
+                            placeholder="After kw, n numbers of chars">
                     </div>
                 </div>
             </div>
@@ -36,13 +40,69 @@
                 <br>
                 <div class="row" style="margin-top: 10px;">
                     <div class="col">
-                        <button style="justify-content:center;" class="btn btn-secondary add-more" id="add-0">Add More</button>
+                        <button style="justify-content:center;" class="btn btn-secondary add-more" id="add-0">Add
+                            More</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% else %}
+<div class="row">
+    <div class="col-8 mx-auto mt-5 text-center" id="kw-container">
+        {% for keyword, value_d in keyword_dict.items() %}
+        <div class="row justify-content-center kw-container-single" style="margin-top:10px">
+            <div class="col-6 offset-2">
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-4">Keyword:</div>
+                    <div class="col-5">
+                        <input type="text" name="kw-{{loop.index0}}" id="kw-{{loop.index0}}"
+                            class="kw-class text-center" placeholder="Enter Keyword" value="{{keyword}}">
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-4">Prefix starts at:</div>
+                    <div class="col-5">
+                        <input type="text" name="prefix-{{loop.index0}}" id="prefix-{{loop.index0}}"
+                            class="prefix-class text-center" placeholder="Before kw, n numbers of chars"
+                            value="{{value_d['start_left']}}">
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-4">Postfix ends at:</div>
+                    <div class="col-5">
+                        <input type="text" name="postfix-{{loop.index0}}" id="postfix-{{loop.index0}}"
+                            class="postfix-class text-center" placeholder="After kw, n numbers of chars"
+                            value="{{value_d['end_right']}}">
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <br>
+                {% if loop.index0 != 0 %}
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col">
+                        <button style="justify-content:center;" class="btn btn-danger delete-one"
+                            id="delete-{{loop.index0}}">Remove</button>
+                    </div>
+                </div>
+                {% else %}
+                <br>
+                <br>
+                {% endif %}
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col">
+                        <button style="justify-content:center;" class="btn btn-secondary add-more"
+                            id="add-{{loop.index0}}">Add More</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 <div class="row">
     <div class="col text-center" id="error" style="color: red;">Please add at least one keyword</div>
 </div>
@@ -55,7 +115,8 @@
 {% endblock %}
 
 {% block styles_lib %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 {% endblock %}
 {% block styles %}
 <style>
@@ -76,6 +137,7 @@
     button {
         font-size: 14px !important;
     }
+
     .centered_button {
         align-self: center;
         width: fit-content;
@@ -83,22 +145,25 @@
 </style>
 {% endblock %}
 {% block js__head_lib %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"
+    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
 {% endblock %}
 {% block js_scripts %}
 <script>
     var csrf_token = "{{ csrf_token() }}";
-$.ajaxSetup({
-    beforeSend: function (xhr, settings) {
-        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-            xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
         }
-    }
-});
+    });
 </script>
 <script>
-            $('#error').hide();
+    $('#error').hide();
 
     function kw_container_single_getter(last_id) {
         var updated_id = last_id + 1;
@@ -138,90 +203,98 @@ $.ajaxSetup({
         </div>
     </div>`;
     }
-    function remove_kw(){
-        $('.delete-one').click( function(e){
-        e.preventDefault();
-        var target_id = e.target.id;
-        $(`#kw-container-${target_id.split('-')[1]}`).remove();
-        $(`.add-more`).last().attr('disabled', false);
-        remove_kw();
-    });
+    function remove_kw() {
+        $('.delete-one').click(function (e) {
+            e.preventDefault();
+            var target_id = e.target.id;
+            $(`#kw-container-${target_id.split('-')[1]}`).remove();
+            $(`.add-more`).last().attr('disabled', false);
+            remove_kw();
+        });
     }
-    function click_event_add(){
-        $('.add-more').click( function(e){
-        e.preventDefault();
-        var target_id = e.target.id;
-        var target_id_num = target_id.split('-')[1]*1;
-        if (target_id_num > 0){
-            var html_string = kw_container_single_getter(target_id_num);
-            $('#kw-container').append(html_string);
-            $('#' + target_id).attr('disabled', true);
-            console.log($('.kw-container-single').length, target_id_num+1);
-            if ($('.kw-container-single').length > target_id_num+2){
-                //remove last
-                $('.kw-container-single').last().remove();
+    function click_event_add() {
+        $('.add-more').click(function (e) {
+            e.preventDefault();
+            var target_id = e.target.id;
+            var target_id_num = target_id.split('-')[1] * 1;
+            if (target_id_num > 0) {
+                var html_string = kw_container_single_getter(target_id_num);
+                $('#kw-container').append(html_string);
+                $('#' + target_id).attr('disabled', true);
+                console.log($('.kw-container-single').length, target_id_num + 1);
+                if ($('.kw-container-single').length > target_id_num + 2) {
+                    //remove last
+                    $('.kw-container-single').last().remove();
+                }
             }
-        }
-        click_event_add();
-        remove_kw();
-    });
+            click_event_add();
+            remove_kw();
+        });
     }
-    $('#add-0').click((e)=>{
+    $('#add-0').click((e) => {
         e.preventDefault();
         var target_id = 'add-0';
         // console.log(target_id);
-        var html_string = kw_container_single_getter(target_id.split('-')[1]*1);
+        var html_string = kw_container_single_getter(target_id.split('-')[1] * 1);
         $('#kw-container').append(html_string);
         $('#add-0').attr('disabled', true);
         click_event_add();
         remove_kw();
     });
-    function process_kw_data(){
+    function process_kw_data() {
         var data_obj = {};
         var elem_list = $('.kw-container-single');
-        for(var i=0;i<elem_list.length;i++){
+        for (var i = 0; i < elem_list.length; i++) {
             var kw = $('.kw-class')[i].value;
-            if (kw){
+            if (kw) {
                 var prefx = $('.prefix-class')[i].value;
-            var pstfx = $('.postfix-class')[i].value;
-            prefx = prefx.match(/^-?\d+$/)? prefx * 1:0;
-            pstfx = pstfx.match(/^-?\d+$/)? pstfx * 1:0;
-            data_obj[i] = {'kw': kw, 'prefx':prefx, 'pstfx':pstfx };
+                var pstfx = $('.postfix-class')[i].value;
+                prefx = prefx.match(/^-?\d+$/) ? prefx * 1 : 0;
+                pstfx = pstfx.match(/^-?\d+$/) ? pstfx * 1 : 0;
+                data_obj[i] = { 'kw': kw, 'prefx': prefx, 'pstfx': pstfx };
             }
 
         }
         return data_obj;
     }
-    $('#submit-all').click((e)=>{
+
+    if ($('.kw-container-single').length > 1){
+        $('.add-more').attr('disabled', true);
+        $(`#add-${$('.kw-container-single').length-1}`).attr('disabled', false);
+        click_event_add();
+        remove_kw();
+    }
+
+    $('#submit-all').click((e) => {
         e.preventDefault();
         $('#submit-all').attr('disabled', true);
         var data_obj = process_kw_data();
-        if (data_obj){
+        if (data_obj) {
             $('#error').hide();
             $.ajax({
-                type:"POST",
+                type: "POST",
                 contentType: "application/json; charset=utf-8",
-                data : JSON.stringify({'kw':data_obj}),
+                data: JSON.stringify({ 'kw': data_obj }),
                 dataType: "json",
                 url: "{{ url_for('file_uadd_keywords', file_id = file_dict['file_id'])}}",
                 success: function (data) {
-                            console.log(data);
-                            if (data.status){
-                                setTimeout(()=>{
-                                    window.location.href = "{{ url_for('dashboard')}}";
-                                },200)
+                    console.log(data);
+                    if (data.status) {
+                        setTimeout(() => {
+                            window.location.href = "{{ url_for('dashboard')}}";
+                        }, 200)
 
-                            }
-                            else {
-                                $('#error').show();
-                            }
-                        }
-                });
-  
+                    }
+                    else {
+                        $('#error').show();
+                    }
+                }
+            });
+
 
         }
-        else{
-    $('#error').show();
+        else {
+            $('#error').show();
         }
     });
 </script>
