@@ -150,9 +150,9 @@ def get_list_of_file_d(finder_d = {}):
     from db_utils import getter_file_list
     return getter_file_list(finder_dict=finder_d ,sort_dict={'updated':-1})
 
-def report_gen(file_id, container_dir):
+def report_gen(file_id, container_dir, user_id):
     from config import pp
-    file_dict = get_file_by_id(file_id)
+    file_dict = get_file_by_id(file_id, user_id)
     keyword_dict = file_dict.get('keyword_dict', {})
     file_name = file_dict.get('file_name', 'nofile')
     full_file_path = f'{container_dir}/{file_name}'

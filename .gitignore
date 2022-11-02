@@ -137,3 +137,6 @@ dmypy.json
 # Files media
 files/
 media/
+oauth/
+.DS_Store
+deploy/

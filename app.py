@@ -199,7 +199,7 @@ def report_getter(file_id):
     if request.method == 'POST':
         # Generate report
         generate_b = request.json.get('generate', True)
-        status = report_gen(file_id, app.config['UPLOADED_PDFILES_DEST'])
+        status = report_gen(file_id, app.config['UPLOADED_PDFILES_DEST'], user_id)
         return jsonify({'status':status})
     report_processed = report_processor(report_bool, file_report_list)
     return render_template('pages/report_getter.html', file_dict = file_dict, report_bool = report_bool, file_report_list = file_report_list, generated_at = generated_at, report_processed = report_processed, key_list_title = ['Keyword', 'Start left', 'End right', 'Appearance Count'])
@@ -275,7 +275,7 @@ def callback():
         _saver_d = {'username':id_info.get("sub"), 'role':'user', 'user_id':create_trx(8)}
         saver_d = {**_saver_d, **getter_d}
         user_added = register_new_google(saver_d)
-        app.logger(f'user_added:{user_added}')
+        app.logger.debug(f'user_added:{user_added}')
         session['username'] = id_info.get("sub")
         session['logged_in'] = True
         session['role'] = 'user'
