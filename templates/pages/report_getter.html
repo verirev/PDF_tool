@@ -192,25 +192,7 @@
 </script>
 <script>
     const file_id = "{{file_dict['file_id']}}";
-    var opt = {
-        margin: 1,
-        filename: `Report_${file_id}.pdf`,
-        pagebreak:{'mode':'avoid-all'},
-        html2canvas: {
-            dpi: 250,
-            scale: 4,
-            letterRendering: true,
-            useCORS: true
-        },
-        jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-    };
-    function go_get_url(url) {
-        window.location.href = url;
-    }
-    function report_down() {
-        const element = document.getElementById('pdf-container');
-        html2pdf().set(opt).from(element).save();
-    }
+
     function report_gen(url) {
         $.ajax({
             type: "POST",
@@ -231,6 +213,27 @@
                 }
             }
         });
+    }
+</script>
+<script>
+    var opt = {
+        margin: 1,
+        filename: `Report_${file_id}.pdf`,
+        pagebreak: { 'mode': 'avoid-all' },
+        html2canvas: {
+            dpi: 250,
+            scale: 4,
+            letterRendering: true,
+            useCORS: true
+        },
+        jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
+    };
+    function go_get_url(url) {
+        window.location.href = url;
+    }
+    function report_down() {
+        const element = document.getElementById('pdf-container');
+        html2pdf().set(opt).from(element).save();
     }
 </script>
 {% endblock %}
